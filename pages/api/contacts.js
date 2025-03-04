@@ -1,16 +1,35 @@
-export default function handler(req, res) {
-  if (req.method === 'POST') {
-    const { name, email, message } = req.body;
+import { useState } from "react";
 
-    // Validate the input
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
+export default function ContactForm() {
+    const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
-    // Simulate sending an email
-    console.log('Sending email:', { name, email, message });
-    res.status(200).json({ message: 'Email sent successfully' });
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
-  }
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const response = await fetch("/api/sendEmail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert("Email sent successfully!");
+            setFormData({ name: "", email: "", message: "" }); // Auto-reset form
+        } else {
+            alert("Error sending email. Please try again.");
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input type="text" name="name" placeholder="Your Name" value={formData.name} onChange={handleChange} required />
+            <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} required />
+            <textarea name="message" placeholder="Your Message" value={formData.message} onChange={handleChange} required></textarea>
+            <button type="submit">Send</button>
+        </form>
+    );
 }
